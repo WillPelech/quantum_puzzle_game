@@ -9,6 +9,7 @@ enum EntityType   { PLAYER, BLOCK, PLATFORM, NPC, KEY, DOOR, BULLET };
 enum AIType       { WANDERER, FOLLOWER, JUMPER                 };
 enum AIState      { WALKING, IDLE, FOLLOWING, JUMPING           };
 enum gworld  {REAL=0, GHOST=1};
+enum deadOrAlive {DEAD,ALIVE};
 class Entity
 {
 private:
@@ -40,6 +41,7 @@ private:
 
     int mLives = 3;
     bool key_obtained=false;
+    deadOrAlive enemyDeadOrAlive = ALIVE;
     
     bool mIsCollidingTop    = false;
     bool mIsCollidingBottom = false;
@@ -130,7 +132,9 @@ public:
     EntityType  getEntityType()            const { return mEntityType;            }
     AIType      getAIType()                const { return mAIType;                }
     AIState     getAIState()               const { return mAIState;               }
-    EntityStatus     getActive()           const { return  mEntityStatus;               }
+    EntityStatus     getActive()           const { return  mEntityStatus;         }
+    deadOrAlive getDeadOrAlive()           const { return enemyDeadOrAlive;       }
+    // int getKillCount()                     const {return killCount;               }
 
     
     bool isCollidingTop()    const { return mIsCollidingTop;    }
@@ -189,6 +193,7 @@ public:
     bool get_key(){
         return key_obtained;
     }
+    void setDeadOrAlive(deadOrAlive new_status)            { enemyDeadOrAlive = new_status; }
     Vector2 get_inital_pos(){
         return spawn_in_position;
     }

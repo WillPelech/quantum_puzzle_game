@@ -157,7 +157,7 @@ void Entity::checkCollisionX(Map *map)
 
     // COLLISION ON RIGHT (moving right)
     if (map->isSolidTileAt(rightCentreProbe, &xOverlap, &yOverlap) 
-         && mVelocity.x > 0.0f && yOverlap >= 0.5f)
+         && mVelocity.x > 0.0f)
     {
         mPosition.x -= xOverlap * 1.01f;   // push left
         mVelocity.x  = 0.0f;
@@ -166,7 +166,7 @@ void Entity::checkCollisionX(Map *map)
 
     // COLLISION ON LEFT (moving left)
     if (map->isSolidTileAt(leftCentreProbe, &xOverlap, &yOverlap) 
-         && mVelocity.x < 0.0f && yOverlap >= 0.5f)
+         && mVelocity.x < 0.0f)
     {
         mPosition.x += xOverlap * 1.01;   // push right
         mVelocity.x  = 0.0f;
@@ -240,10 +240,26 @@ void Entity::AIFollow(Entity *target)
         // Change direction of the enemy
         if (mPosition.x > target->getPosition().x) moveLeft();
         else                            moveRight();
+        break;
+
     case FOLLOWING:
-        mPosition.x = lerp(mPosition.x,target->getPosition().x,0.001f);
-        mPosition.y = lerp(mPosition.y,target->getPosition().y,0.005f);
-    
+        {
+            // Move toward the player using the same physics/collision pipeline
+            Vector2 dir = {
+                target->getPosition().x - mPosition.x,
+                target->getPosition().y - mPosition.y
+            };
+
+            float lenSq = dir.x * dir.x + dir.y * dir.y;
+            if (lenSq > 0.0f) {
+                float len = sqrtf(lenSq);
+                dir.x /= len;
+                dir.y /= len;
+                mMovement = dir;
+            }
+        }
+        break;
+
     default:
         break;
     }
@@ -286,12 +302,12 @@ void Entity::AIJump(Entity *target)
     }
 }
 
-void Entity::update(float deltaTime, Entity *player, Map *map, 
+void Entity::update(float deltaTime, Entity *entity, Map *map, 
     Entity *collidableEntities, int collisionCheckCount)
 {
     if (mEntityStatus == INACTIVE) return;
     
-    if (mEntityType == NPC) AIActivate(player);
+    if (mEntityType == NPC) AIActivate(entity);
 
     resetColliderFlags();
 
@@ -307,7 +323,7 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
         // STEP 1: Immediately return the flag to its original false state
         mIsJumping = false;
         
-        // STEP 2: The player now acquires an upward velocity
+        // STEP 2: The entity now acquires an upward velocity
         mVelocity.y -= mJumpingPower;
     }
 
@@ -321,25 +337,32 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
     
     if (mTextureType == ATLAS && GetLength(mMovement) != 0)
         animate(deltaTime);
-    if (mEntityType == NPC && isColliding(player)){
-        player->lose_life();   
-        player->setPosition(player->get_inital_pos());
-        this->setPosition(this->get_inital_pos());
-        this->setAIState(IDLE);
-    }
-    if(mEntityType == KEY && isColliding(player)){
-        player->add_key();
-        this->deactivate();
-    } 
-    if(mEntityType == DOOR && isColliding(player) && player->get_key()){
-        this->deactivate();
+
+    if (entity != nullptr)
+    {
+        if (mEntityType == NPC && isColliding(entity)){
+            entity->lose_life();   
+            entity->setPosition(entity->get_inital_pos());
+            resetMovement();
+            setAIState(IDLE);
+        }
+        if(mEntityType == KEY && isColliding(entity)){
+            entity->add_key();
+            this->deactivate();
+        } 
+        if(mEntityType == DOOR && isColliding(entity) && entity->get_key()){
+            this->deactivate();
+        }
+        if(mEntityType == BULLET && entity->getEntityType()== NPC && isColliding(entity)){
+            entity->setDeadOrAlive(DEAD);
+        }
     }
 
 }
 
 void Entity::render()
 {
-    if(mEntityStatus == INACTIVE) return;
+    if(mEntityStatus == INACTIVE || enemyDeadOrAlive == DEAD && mEntityType == NPC) return;
 
     Rectangle textureArea;
     Rectangle heartArea;
@@ -382,7 +405,7 @@ void Entity::render()
         static_cast<float>(mScale.y) / 2.0f
     };
 
-    // Render the texture on screen
+    //  the texture on screen
     DrawTexturePro(
         mTexture, 
         textureArea, destinationArea, originOffset,

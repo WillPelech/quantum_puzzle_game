@@ -78,4 +78,7 @@ public:
     void update_bullets(float deltaTime);
     void render_bullets();
     void switch_enemy_set();
+    void render_enemies();
+    void initialise_enemies();
+    void update_enemies(float deltaTime);
 };

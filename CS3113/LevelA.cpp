@@ -2,31 +2,6 @@
 
 LevelA::LevelA()                                      : Scene { {0.0f}, nullptr   } {}
 
-void LevelA::fire_bullet()
-{  
-   if (num_fired>20){
-      return;
-   }
-   const char *tex = (mGameState.world == REAL) ? "assets/mouse_bullet.gif" : "assets/ghost_bullet.gif";
-   Vector2 pos = mGameState.mouse->getPosition();
-   Vector2 scale = { 24.0f, 24.0f };
-   Entity *b = new Entity(pos, scale, tex, BULLET);
-   b->setColliderDimensions(scale);
-   b->setAcceleration({0.0f, 0.0f});
-   b->setSpeed(100);
-
-   Direction d = mGameState.mouse->getDirection();
-   switch (d) {
-      case LEFT:  b->moveLeft(); break;
-      case RIGHT: b->moveRight(); break;
-      case UP:    b->moveUp(); break;
-      case DOWN:  b->moveDown(); break;
-      default:    b->moveRight(); break;
-   }
-
-   mBullets.push_back(b);
-   num_fired +=1;
-}
 
 void LevelA::update_bullets(float deltaTime)
 {
@@ -49,7 +24,35 @@ void LevelA::update_bullets(float deltaTime)
       bool out = (p.x < lb || p.x > rb || p.y < tb || p.y > bb);
       bool stuck = (Vector2Distance(prev, p) < 0.5f);
 
-      if (hitTile || out || stuck) {
+      // Bullet-enemy collision check (AABB style)
+      auto bulletHits = [b](Entity *target) -> bool {
+         if (!target || !target->isActive()) return false;
+
+         Vector2 bPos  = b->getPosition();
+         Vector2 tPos  = target->getPosition();
+         Vector2 bSize = b->getColliderDimensions();
+         Vector2 tSize = target->getColliderDimensions();
+
+         float xDistance = fabs(bPos.x - tPos.x) - ((bSize.x + tSize.x) / 2.0f);
+         float yDistance = fabs(bPos.y - tPos.y) - ((bSize.y + tSize.y) / 2.0f);
+
+         return (xDistance < 0.0f && yDistance < 0.0f);
+      };
+
+      bool hitEnemy = false;
+      Entity *enemies[] = {
+         real_enemy1, real_enemy2, real_enemy3, real_enemy4, real_enemy5,
+         dead_enemy1, dead_enemy2, dead_enemy3, dead_enemy4, dead_enemy5
+      };
+
+      for (Entity *e : enemies) {
+         if (bulletHits(e)) {
+            e->deactivate();
+            hitEnemy = true;
+         }
+      }
+
+      if (hitTile || out || stuck || hitEnemy) {
          delete b;
       } else {
          alive.push_back(b);
@@ -149,6 +152,8 @@ void LevelA::initialise()
    mGameState.camera.zoom = 1.0f;                                // default zoom
    key->deactivate();
    door->deactivate();                                                              // 
+   initialise_enemies();
+   switch_enemy_set();
 }
 void LevelA::switch_worlds(){
    if (IsKeyPressed(KEY_V)){
@@ -164,16 +169,199 @@ void LevelA::switch_worlds(){
          mGameState.mouse->setTexture("assets/ghost.png");
          mGameState.mouse->setAnimationAtlas(ghostAnimationAtlas);
       }
+      switch_enemy_set();
    }
+}
+void LevelA::initialise_enemies(){
+   // Spawn enemies at fixed positions based on level origin (away from mouse start)
+   real_enemy1 = new Entity(
+      {mOrigin.x + 200.0f, mOrigin.y - 200.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   real_enemy2 = new Entity(
+      {mOrigin.x + 400.0f, mOrigin.y - 150.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   real_enemy3 = new Entity(
+      {mOrigin.x + 150.0f, mOrigin.y - 300.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   real_enemy4 = new Entity(
+      {mOrigin.x + 350.0f, mOrigin.y - 300.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   real_enemy5 = new Entity(
+      {mOrigin.x + 500.0f, mOrigin.y - 250.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   dead_enemy1 = new Entity(
+      {mOrigin.x + 220.0f, mOrigin.y - 200.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   dead_enemy2 = new Entity(
+      {mOrigin.x + 420.0f, mOrigin.y - 150.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   dead_enemy3 = new Entity(
+      {mOrigin.x + 170.0f, mOrigin.y - 320.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   dead_enemy4 = new Entity(
+      {mOrigin.x + 370.0f, mOrigin.y - 320.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+   dead_enemy5 = new Entity(
+      {mOrigin.x + 520.0f, mOrigin.y - 270.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/slime.png",                   // texture file address
+      NPC);
+
+   // Set all enemies to FOLLOWER AI using the lerp-based FOLLOWING state
+   real_enemy1->setAIType(FOLLOWER); real_enemy1->setAIState(FOLLOWING);
+   real_enemy2->setAIType(FOLLOWER); real_enemy2->setAIState(FOLLOWING);
+   real_enemy3->setAIType(FOLLOWER); real_enemy3->setAIState(FOLLOWING);
+   real_enemy4->setAIType(FOLLOWER); real_enemy4->setAIState(FOLLOWING);
+   real_enemy5->setAIType(FOLLOWER); real_enemy5->setAIState(FOLLOWING);
+
+   dead_enemy1->setAIType(FOLLOWER); dead_enemy1->setAIState(FOLLOWING);
+   dead_enemy2->setAIType(FOLLOWER); dead_enemy2->setAIState(FOLLOWING);
+   dead_enemy3->setAIType(FOLLOWER); dead_enemy3->setAIState(FOLLOWING);
+   dead_enemy4->setAIType(FOLLOWER); dead_enemy4->setAIState(FOLLOWING);
+   dead_enemy5->setAIType(FOLLOWER); dead_enemy5->setAIState(FOLLOWING);
+
+   // Make enemies move faster than the default speed
+   const int ENEMY_SPEED = 100;
+   real_enemy1->setSpeed(ENEMY_SPEED);
+   real_enemy2->setSpeed(ENEMY_SPEED);
+   real_enemy3->setSpeed(ENEMY_SPEED);
+   real_enemy4->setSpeed(ENEMY_SPEED);
+   real_enemy5->setSpeed(ENEMY_SPEED);
+
+   dead_enemy1->setSpeed(ENEMY_SPEED);
+   dead_enemy2->setSpeed(ENEMY_SPEED);
+   dead_enemy3->setSpeed(ENEMY_SPEED);
+   dead_enemy4->setSpeed(ENEMY_SPEED);
+   dead_enemy5->setSpeed(ENEMY_SPEED);
 }
 void LevelA::switch_enemy_set(){
    if(mGameState.world == REAL){
-      /*
-      TODO: I need to edit entity.cpp to add a dead and alive enum which will make it easy 
-      also maybe a method to switch
-      */
+      dead_enemy1->deactivate();
+      dead_enemy2->deactivate();
+      dead_enemy3->deactivate();
+      dead_enemy4->deactivate();
+      dead_enemy5->deactivate();
+      real_enemy1->activate();
+      real_enemy2->activate();
+      real_enemy3->activate();
+      real_enemy4->activate();
+      real_enemy5->activate();
+   }else{
+      dead_enemy1->activate();
+      dead_enemy2->activate();
+      dead_enemy3->activate();
+      dead_enemy4->activate();
+      dead_enemy5->activate();
+      real_enemy1->deactivate();
+      real_enemy2->deactivate();
+      real_enemy3->deactivate();
+      real_enemy4->deactivate();
+      real_enemy5->deactivate();
+      
    }
 
+}
+void LevelA::update_enemies(float deltaTime){
+   real_enemy1->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   real_enemy2->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   real_enemy3->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   real_enemy4->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   real_enemy5->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   dead_enemy1->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   dead_enemy2->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   dead_enemy3->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   dead_enemy4->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+   dead_enemy5->update(
+      deltaTime,
+      mGameState.mouse,
+      mGameState.map,
+      nullptr,
+      0
+   );
+}
+void LevelA::render_enemies(){
+   dead_enemy1->render();
+   dead_enemy2->render();
+   dead_enemy3->render();
+   dead_enemy4->render();
+   dead_enemy5->render();
+   real_enemy1->render();
+   real_enemy2->render();
+   real_enemy3->render();
+   real_enemy4->render();
+   real_enemy5->render();
 }
 void LevelA::update(float deltaTime)
 {
@@ -192,6 +380,8 @@ void LevelA::update(float deltaTime)
    );
 
    update_bullets(deltaTime);
+
+   update_enemies(deltaTime);
 
    Vector2 currentPlayerPosition = { mGameState.mouse->getPosition().x, mOrigin.y };
 
@@ -216,6 +406,7 @@ void LevelA::render()
    DrawTexturePro(mCurrentBg, src, dst, {0.0f, 0.0f}, 0.0f, WHITE);
 
    mGameState.map->render();
+   render_enemies();
    render_bullets();
    key -> render();
    door -> render();
@@ -238,4 +429,30 @@ void LevelA::shutdown()
 
    // UnloadMusicStream(mGameState.bgm);
    // UnloadSound(mGameState.jumpSound);
+}
+
+void LevelA::fire_bullet()
+{  
+   if (num_fired>20){
+      return;
+   }
+   const char *tex = (mGameState.world == REAL) ? "assets/mouse_bullet.gif" : "assets/ghost_bullet.gif";
+   Vector2 pos = mGameState.mouse->getPosition();
+   Vector2 scale = { 24.0f, 24.0f };
+   Entity *b = new Entity(pos, scale, tex, BULLET);
+   b->setColliderDimensions(scale);
+   b->setAcceleration({0.0f, 0.0f});
+   b->setSpeed(100);
+
+   Direction d = mGameState.mouse->getDirection();
+   switch (d) {
+      case LEFT:  b->moveLeft(); break;
+      case RIGHT: b->moveRight(); break;
+      case UP:    b->moveUp(); break;
+      case DOWN:  b->moveDown(); break;
+      default:    b->moveRight(); break;
+   }
+
+   mBullets.push_back(b);
+   num_fired +=1;
 }

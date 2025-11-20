@@ -103,6 +103,7 @@ void update()
 
         deltaTime -= FIXED_TIMESTEP;
     }
+
 }
 
 void render()
