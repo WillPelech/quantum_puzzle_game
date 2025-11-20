@@ -1,0 +1,241 @@
+#include "LevelA.h"
+
+LevelA::LevelA()                                      : Scene { {0.0f}, nullptr   } {}
+
+void LevelA::fire_bullet()
+{  
+   if (num_fired>20){
+      return;
+   }
+   const char *tex = (mGameState.world == REAL) ? "assets/mouse_bullet.gif" : "assets/ghost_bullet.gif";
+   Vector2 pos = mGameState.mouse->getPosition();
+   Vector2 scale = { 24.0f, 24.0f };
+   Entity *b = new Entity(pos, scale, tex, BULLET);
+   b->setColliderDimensions(scale);
+   b->setAcceleration({0.0f, 0.0f});
+   b->setSpeed(100);
+
+   Direction d = mGameState.mouse->getDirection();
+   switch (d) {
+      case LEFT:  b->moveLeft(); break;
+      case RIGHT: b->moveRight(); break;
+      case UP:    b->moveUp(); break;
+      case DOWN:  b->moveDown(); break;
+      default:    b->moveRight(); break;
+   }
+
+   mBullets.push_back(b);
+   num_fired +=1;
+}
+
+void LevelA::update_bullets(float deltaTime)
+{
+   if (!mGameState.map) return;
+   float lb = mGameState.map->getLeftBoundary();
+   float rb = mGameState.map->getRightBoundary();
+   float tb = mGameState.map->getTopBoundary();
+   float bb = mGameState.map->getBottomBoundary();
+
+   std::vector<Entity*> alive;
+   alive.reserve(mBullets.size());
+
+   for (auto *b : mBullets) {
+      Vector2 prev = b->getPosition();
+      b->update(deltaTime, nullptr, mGameState.map, nullptr, 0);
+
+      float xO=0.0f, yO=0.0f;
+      bool hitTile = mGameState.map->isSolidTileAt(b->getPosition(), &xO, &yO);
+      Vector2 p = b->getPosition();
+      bool out = (p.x < lb || p.x > rb || p.y < tb || p.y > bb);
+      bool stuck = (Vector2Distance(prev, p) < 0.5f);
+
+      if (hitTile || out || stuck) {
+         delete b;
+      } else {
+         alive.push_back(b);
+      }
+   }
+
+   mBullets.swap(alive);
+}
+
+void LevelA::render_bullets()
+{
+   for (auto *b : mBullets) b->render();
+}
+LevelA::LevelA(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
+
+LevelA::~LevelA() { shutdown(); }
+
+void LevelA::initialise()
+{
+   mGameState.nextSceneID = 0;
+   mGameState.bgm = {0};
+   mGameState.jumpSound = {0};
+   mGameState.world = REAL;
+   prev_state = mGameState.world;
+   // mGameState.bgm = LoadMusicStream();
+    SetMusicVolume(mGameState.bgm, 0.33f); 
+   // PlayMusicStream(gState.bgm);
+
+   // mGameState.jumpSound = LoadSound();
+
+   /*
+      ----------- MAP -----------
+   */
+   mRealMap = new Map(
+      LEVEL_WIDTH, LEVEL_HEIGHT,
+      (unsigned int *) mLevelData1,
+      "assets/cave_/cave.png",
+      TILE_DIMENSION,
+      5, 5,
+      mOrigin
+   );
+   mGhostMap = new Map(
+      LEVEL_WIDTH, LEVEL_HEIGHT,
+      (unsigned int *) mLevelData2,
+      "assets/ghost_tiles.png",
+      TILE_DIMENSION,
+      4, 4,
+      mOrigin
+   );
+   mGameState.map = mRealMap;
+
+   mBgReal = LoadTexture("assets/cave_floor.png");
+   mBgGhost = LoadTexture("assets/ghost_floor.png");
+   mCurrentBg = mBgReal;
+
+   /*
+      ----------- PROTAGONIST -----------
+   */
+  
+   float sizeRatio  = 48.0f / 64.0f;
+
+   // Assets from @see https://sscary.itch.io/the-adventurer-female
+   mGameState.mouse = new Entity(
+      {mOrigin.x - 300.0f, mOrigin.y - 200.0f}, // position
+      {90.0f * sizeRatio, 90.0f},             // scale
+      "assets/mouse.png",                   // texture file address
+      ATLAS,                                    // single image or atlas?
+      { 4, 4 },                                 // atlas dimensions
+      mouseAnimationAtlas,                    // actual atlas
+      PLAYER                                    // entity type
+   );
+   key = new Entity(
+      {mOrigin.x + 300.0f, mOrigin.y -20.0f}, // position
+      {50.0f , 50.0f*sizeRatio},             // scale
+      "assets/key.png",                   // texture file address
+      KEY 
+   );
+   door = new Entity(
+      {mOrigin.x + 300.0f, mOrigin.y -20.0f}, // position
+      {50.0f , 50.0f*sizeRatio},             // scale
+      "assets/lock.png",                   // texture file address
+      DOOR 
+   );
+   mGameState.mouse->setColliderDimensions({
+      mGameState.mouse->getScale().x / 2.5f,
+      mGameState.mouse->getScale().y / 2.1f
+   });
+   mGameState.mouse->setAcceleration({0.0f, 0.0f});
+   
+   /*
+      ----------- CAMERA -----------
+   */
+   mGameState.camera = { 0 };                                    // zero initialize
+   mGameState.camera.target = mGameState.mouse->getPosition(); // camera follows player
+   mGameState.camera.offset = mOrigin;                           // camera offset to center of screen
+   mGameState.camera.rotation = 0.0f;                            // no rotation
+   mGameState.camera.zoom = 1.0f;                                // default zoom
+   key->deactivate();
+   door->deactivate();                                                              // 
+}
+void LevelA::switch_worlds(){
+   if (IsKeyPressed(KEY_V)){
+      mGameState.world = (mGameState.world == REAL ? GHOST : REAL);
+      if (mGameState.world == REAL){
+         mGameState.map = mRealMap;
+         mCurrentBg = mBgReal;
+         mGameState.mouse->setTexture("assets/mouse.png");
+         mGameState.mouse->setAnimationAtlas(mouseAnimationAtlas);
+      } else {
+         mGameState.map = mGhostMap;
+         mCurrentBg = mBgGhost;
+         mGameState.mouse->setTexture("assets/ghost.png");
+         mGameState.mouse->setAnimationAtlas(ghostAnimationAtlas);
+      }
+   }
+}
+void LevelA::switch_enemy_set(){
+   if(mGameState.world == REAL){
+      /*
+      TODO: I need to edit entity.cpp to add a dead and alive enum which will make it easy 
+      also maybe a method to switch
+      */
+   }
+
+}
+void LevelA::update(float deltaTime)
+{
+   switch_worlds();
+   mFireTimer -= deltaTime;
+   if (IsKeyPressed(KEY_SPACE) && mFireTimer <= 0.0f) {
+      fire_bullet();
+      mFireTimer = mFireCooldown;
+   }
+   mGameState.mouse->update(
+      deltaTime,      // delta time / fixed timestep
+      nullptr,        // player
+      mGameState.map, // map
+      nullptr,        // collidable entities
+      0               // col. entity count
+   );
+
+   update_bullets(deltaTime);
+
+   Vector2 currentPlayerPosition = { mGameState.mouse->getPosition().x, mOrigin.y };
+
+   if (mGameState.mouse->getPosition().y > 800.0f) mGameState.nextSceneID = 1;
+   
+   panCamera(&mGameState.camera, &currentPlayerPosition);
+   if(prev_state != mGameState.world){
+      prev_state = mGameState.world;
+   }
+   key -> update(deltaTime, mGameState.mouse, mGameState.map, nullptr, 0);
+   door -> update(deltaTime, mGameState.mouse, mGameState.map, nullptr, 0);
+}
+
+void LevelA::render()
+{
+   ClearBackground(ColorFromHex(mBGColourHexCode));
+
+   float mapWidth  = LEVEL_WIDTH * TILE_DIMENSION;
+   float mapHeight = LEVEL_HEIGHT * TILE_DIMENSION;
+   Rectangle src = { 0.0f, 0.0f, (float)mCurrentBg.width, (float)mCurrentBg.height };
+   Rectangle dst = { mOrigin.x - mapWidth/2.0f, mOrigin.y - mapHeight/2.0f, mapWidth, mapHeight };
+   DrawTexturePro(mCurrentBg, src, dst, {0.0f, 0.0f}, 0.0f, WHITE);
+
+   mGameState.map->render();
+   render_bullets();
+   key -> render();
+   door -> render();
+   mGameState.mouse->render();
+
+}
+
+void LevelA::shutdown()
+{
+   delete mGameState.mouse;
+   if (mRealMap) { delete mRealMap; mRealMap = nullptr; }
+   if (mGhostMap) { delete mGhostMap; mGhostMap = nullptr; }
+   mGameState.map = nullptr;
+
+   for (auto *b : mBullets) delete b;
+   mBullets.clear();
+
+   if (mBgReal.id) UnloadTexture(mBgReal);
+   if (mBgGhost.id) UnloadTexture(mBgGhost);
+
+   // UnloadMusicStream(mGameState.bgm);
+   // UnloadSound(mGameState.jumpSound);
+}
