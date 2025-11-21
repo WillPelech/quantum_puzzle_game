@@ -1,79 +1,77 @@
-#include "LevelA.h"
+#include "LevelB.h"
 
-LevelA::LevelA()                                     : Scene { {0.0f}, nullptr   } {}
+LevelB::LevelB()                                      : Scene { {0.0f}, nullptr   } {}
 
 
-void LevelA::update(float deltaTime)
+void LevelB::update_bullets(float deltaTime)
 {
-   switch_worlds();
-   mFireTimer -= deltaTime;
-   if (IsKeyPressed(KEY_SPACE) && mFireTimer <= 0.0f) {
-      fire_bullet();
-      mFireTimer = mFireCooldown;
-   }
-   mGameState.mouse->update(
-      deltaTime,      // delta time / fixed timestep
-      nullptr,        // player
-      mGameState.map, // map
-      nullptr,        // collidable entities
-      0               // col. entity count
-   );
+   if (!mGameState.map) return;
+   float lb = mGameState.map->getLeftBoundary();
+   float rb = mGameState.map->getRightBoundary();
+   float tb = mGameState.map->getTopBoundary();
+   float bb = mGameState.map->getBottomBoundary();
 
-   update_bullets(deltaTime);
+   std::vector<Entity*> alive;
+   alive.reserve(mBullets.size());
 
-   update_enemies(deltaTime);
+   for (auto *b : mBullets) {
+      Vector2 prev = b->getPosition();
+      b->update(deltaTime, nullptr, mGameState.map, nullptr, 0);
 
-   Vector2 currentPlayerPosition = { mGameState.mouse->getPosition().x, mOrigin.y };
+      float xO=0.0f, yO=0.0f;
+      bool hitTile = mGameState.map->isSolidTileAt(b->getPosition(), &xO, &yO);
+      Vector2 p = b->getPosition();
+      bool out = (p.x < lb || p.x > rb || p.y < tb || p.y > bb);
+      bool stuck = (Vector2Distance(prev, p) < 0.5f);
 
-   
-   panCamera(&mGameState.camera, &currentPlayerPosition);
-   if(prev_state != mGameState.world){
-      prev_state = mGameState.world;
+      // Bullet-enemy collision check (AABB style)
+      auto bulletHits = [b](Entity *target) -> bool {
+         if (!target || !target->isActive()) return false;
+
+         Vector2 bPos  = b->getPosition();
+         Vector2 tPos  = target->getPosition();
+         Vector2 bSize = b->getColliderDimensions();
+         Vector2 tSize = target->getColliderDimensions();
+
+         float xDistance = fabs(bPos.x - tPos.x) - ((bSize.x + tSize.x) / 2.0f);
+         float yDistance = fabs(bPos.y - tPos.y) - ((bSize.y + tSize.y) / 2.0f);
+
+         return (xDistance < 0.0f && yDistance < 0.0f);
+      };
+
+      bool hitEnemy = false;
+      Entity *enemies[] = {
+         real_enemy1, real_enemy2, real_enemy3, real_enemy4, real_enemy5,
+         dead_enemy1, dead_enemy2, dead_enemy3, dead_enemy4, dead_enemy5
+      };
+
+      for (Entity *e : enemies) {
+         if (bulletHits(e)) {
+            e->setDeadOrAlive(DEAD);
+            e->deactivate();
+            hitEnemy = true;
+         }
+      }
+
+      if (hitTile || out || stuck || hitEnemy) {
+         delete b;
+      } else {
+         alive.push_back(b);
+      }
    }
-   if (mGameState.world == REAL) {
-      key -> update(deltaTime, mGameState.mouse, mGameState.map, nullptr, 0);
-      door -> update(deltaTime, mGameState.mouse, mGameState.map, nullptr, 0);
-   }
-   // }
-   // std::cout <<"made it to end game logic ";
-   if (get_num_alive()== 0 && key->getActive()== INACTIVE && !door->getDeadOrAlive()){
-      
-      mGameState.nextSceneID = 1;
-   }
+
+   mBullets.swap(alive);
 }
 
-void LevelA::render()
-{
-   ClearBackground(ColorFromHex(mBGColourHexCode));
-
-   float mapWidth  = LEVEL_WIDTH * TILE_DIMENSION;
-   float mapHeight = LEVEL_HEIGHT * TILE_DIMENSION;
-   Rectangle src = { 0.0f, 0.0f, (float)mCurrentBg.width, (float)mCurrentBg.height };
-   Rectangle dst = { mOrigin.x - mapWidth/2.0f, mOrigin.y - mapHeight/2.0f, mapWidth, mapHeight };
-   DrawTexturePro(mCurrentBg, src, dst, {0.0f, 0.0f}, 0.0f, WHITE);
-
-   mGameState.map->render();
-   render_enemies();
-   render_bullets();
-   if (mGameState.world == REAL) {
-      key -> render();
-      door -> render();
-   }
-   mGameState.mouse->render();
-
-}
-
-
-
-void LevelA::render_bullets()
+void LevelB::render_bullets()
 {
    for (auto *b : mBullets) b->render();
 }
-LevelA::LevelA(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
+LevelB::LevelB(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
 
-LevelA::~LevelA() { shutdown(); }
+LevelB::~LevelB() { shutdown(); }
 
-void LevelA::initialise()
+void LevelB::initialise()
 {
    mGameState.nextSceneID = 0;
    mGameState.bgm = {0};
@@ -90,7 +88,7 @@ void LevelA::initialise()
       ----------- MAP -----------
    */
    mRealMap = new Map(
-      LEVEL_WIDTH, LEVEL_HEIGHT,
+      LEVELB_WIDTH, LEVELB_HEIGHT,
       (unsigned int *) mLevelData1,
       "assets/cave_/cave.png",
       TILE_DIMENSION,
@@ -98,7 +96,7 @@ void LevelA::initialise()
       mOrigin
    );
    mGhostMap = new Map(
-      LEVEL_WIDTH, LEVEL_HEIGHT,
+      LEVELB_WIDTH, LEVELB_HEIGHT,
       (unsigned int *) mLevelData2,
       "assets/ghost_tiles.png",
       TILE_DIMENSION,
@@ -107,7 +105,7 @@ void LevelA::initialise()
    );
    mGameState.map = mRealMap;
 
-   mBgReal = LoadTexture("assets/cave_floor.png");
+   mBgReal = LoadTexture("assets/sea_floor.png");
    mBgGhost = LoadTexture("assets/ghost_floor.png");
    mCurrentBg = mBgReal;
 
@@ -139,7 +137,6 @@ void LevelA::initialise()
       "assets/lock.png",                   // texture file address
       DOOR 
    );
-   door->setDeadOrAlive(ALIVE);
    mGameState.mouse->setColliderDimensions({
       mGameState.mouse->getScale().x / 2.5f,
       mGameState.mouse->getScale().y / 2.1f
@@ -159,7 +156,7 @@ void LevelA::initialise()
    initialise_enemies();
    switch_enemy_set();
 }
-void LevelA::switch_worlds(){
+void LevelB::switch_worlds(){
    if (IsKeyPressed(KEY_V)){
       mGameState.world = (mGameState.world == REAL ? GHOST : REAL);
       if (mGameState.world == REAL){
@@ -176,34 +173,55 @@ void LevelA::switch_worlds(){
       switch_enemy_set();
    }
 }
-void LevelA::initialise_enemies(){
+void LevelB::initialise_enemies(){
+    std::map<Direction, std::vector<int>> fishAnimationAtlas = {
+      {DOWN,  { 0,1,2,3}},
+      {LEFT,  { 0,1,2,3}},
+      {UP,    { 0,1,2,3}},
+      {RIGHT, { 0,1,2,3}},
+   };
    // Spawn enemies at fixed positions based on level origin (away from mouse start)
-   real_enemy1 = new Entity(
+      real_enemy1 = new Entity(
+      {mOrigin.x - 300.0f, mOrigin.y + 150.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/fish.png",                   // texture file address
+      ATLAS,
+      {1,4},
+      fishAnimationAtlas,
+      NPC);
+      real_enemy2 = new Entity(
+      {mOrigin.x + 150.0f, mOrigin.y + 150.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/fish.png",                   // texture file address
+      ATLAS,
+      {1,4},
+      fishAnimationAtlas,
+      NPC);
+      real_enemy3 = new Entity(
+      {mOrigin.x + 300.0f, mOrigin.y + 120.0f}, // position
+      {50.0f , 50.0f },             // scale
+      "assets/fish.png",                   // texture file address
+      ATLAS,
+      {1,4},
+      fishAnimationAtlas,
+      NPC);
+      real_enemy4 = new Entity(
       {mOrigin.x + 200.0f, mOrigin.y - 200.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
+      "assets/fish.png",                   // texture file address
+      ATLAS,
+      {1,4},
+      fishAnimationAtlas,
       NPC);
-   real_enemy2 = new Entity(
-      {mOrigin.x - 100.0f, mOrigin.y}, // position
+      real_enemy5 = new Entity(
+      {mOrigin.x + 200.0f, mOrigin.y - 200.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
+      "assets/fish.png",                   // texture file address
+      ATLAS,
+      {1,4},
+      fishAnimationAtlas,
       NPC);
-   real_enemy3 = new Entity(
-      {mOrigin.x, mOrigin.y + 150.0f}, // position
-      {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
-      NPC);
-   real_enemy4 = new Entity(
-      {mOrigin.x + 150.0f, mOrigin.y - 100.0f}, // position
-      {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
-      NPC);
-   real_enemy5 = new Entity(
-      {mOrigin.x + 100.0f, mOrigin.y - 150.0f}, // position
-      {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
-      NPC);
-   dead_enemy1 = new Entity(
+     dead_enemy1 = new Entity(
       {mOrigin.x + 220.0f, mOrigin.y - 200.0f}, // position
       {50.0f , 50.0f },             // scale
       "assets/ghost_slime.png",                   // texture file address
@@ -278,7 +296,7 @@ void LevelA::initialise_enemies(){
    dead_enemy4->setColliderDimensions({dead_enemy4->getScale().x/3,dead_enemy4->getScale().y/3});
    dead_enemy5->setColliderDimensions({dead_enemy5->getScale().x/3,dead_enemy5->getScale().y/3});
 }
-void LevelA::switch_enemy_set(){
+void LevelB::switch_enemy_set(){
    if(mGameState.world == REAL){
       dead_enemy1->deactivate();
       dead_enemy2->deactivate();
@@ -305,7 +323,7 @@ void LevelA::switch_enemy_set(){
    }
 
 }
-void LevelA::update_enemies(float deltaTime){
+void LevelB::update_enemies(float deltaTime){
    real_enemy1->update(
       deltaTime,
       mGameState.mouse,
@@ -377,7 +395,7 @@ void LevelA::update_enemies(float deltaTime){
       0
    );
 }
-void LevelA::render_enemies(){
+void LevelB::render_enemies(){
    dead_enemy1->render();
    dead_enemy2->render();
    dead_enemy3->render();
@@ -389,7 +407,67 @@ void LevelA::render_enemies(){
    real_enemy4->render();
    real_enemy5->render();
 }
-void LevelA::shutdown()
+void LevelB::update(float deltaTime)
+{
+   switch_worlds();
+   mFireTimer -= deltaTime;
+   if (IsKeyPressed(KEY_SPACE) && mFireTimer <= 0.0f) {
+      fire_bullet();
+      mFireTimer = mFireCooldown;
+   }
+   mGameState.mouse->update(
+      deltaTime,      // delta time / fixed timestep
+      nullptr,        // player
+      mGameState.map, // map
+      nullptr,        // collidable entities
+      0               // col. entity count
+   );
+
+   update_bullets(deltaTime);
+
+   update_enemies(deltaTime);
+
+   Vector2 currentPlayerPosition = { mGameState.mouse->getPosition().x, mOrigin.y };
+
+   if (mGameState.mouse->getPosition().y > 800.0f) mGameState.nextSceneID = 0;
+   
+   panCamera(&mGameState.camera, &currentPlayerPosition);
+   if(prev_state != mGameState.world){
+      prev_state = mGameState.world;
+   }
+   if (mGameState.world == REAL) {
+      key -> update(deltaTime, mGameState.mouse, mGameState.map, nullptr, 0);
+      door -> update(deltaTime, mGameState.mouse, mGameState.map, nullptr, 0);
+   }
+   // }
+   // std::cout <<"made it to end game logic ";
+   // if (get_num_alive()== 0 && key->getActive()== INACTIVE && ~door->getDeadOrAlive()){
+   //     mGameState.nextSceneID = 2;
+   // }
+}
+
+void LevelB::render()
+{
+   ClearBackground(ColorFromHex(mBGColourHexCode));
+
+   float mapWidth  = LEVELB_WIDTH * TILE_DIMENSION;
+   float mapHeight = LEVELB_HEIGHT * TILE_DIMENSION;
+   Rectangle src = { 0.0f, 0.0f, (float)mCurrentBg.width, (float)mCurrentBg.height };
+   Rectangle dst = { mOrigin.x - mapWidth/2.0f, mOrigin.y - mapHeight/2.0f, mapWidth, mapHeight };
+   DrawTexturePro(mCurrentBg, src, dst, {0.0f, 0.0f}, 0.0f, WHITE);
+
+   mGameState.map->render();
+   render_enemies();
+   render_bullets();
+   if (mGameState.world == REAL) {
+      key -> render();
+      door -> render();
+   }
+   mGameState.mouse->render();
+
+}
+
+void LevelB::shutdown()
 {
    delete mGameState.mouse;
    if (mRealMap) { delete mRealMap; mRealMap = nullptr; }
@@ -406,7 +484,7 @@ void LevelA::shutdown()
    // UnloadSound(mGameState.jumpSound);
 }
 
-void LevelA::fire_bullet()
+void LevelB::fire_bullet()
 {  
    if (num_fired>20){
       return;
@@ -432,8 +510,9 @@ void LevelA::fire_bullet()
    num_fired +=1;
 }
 
-int LevelA::get_num_alive(){
+int LevelB::get_num_alive(){
    int count = 0;
+   std::cout <<"made it here 1";
    count += real_enemy1->getDeadOrAlive();
    count += real_enemy2->getDeadOrAlive();
    count += real_enemy3->getDeadOrAlive();
@@ -444,64 +523,6 @@ int LevelA::get_num_alive(){
    count += dead_enemy3->getDeadOrAlive();
    count += dead_enemy4->getDeadOrAlive();
    count += dead_enemy5->getDeadOrAlive();
-   // std::cout <<"made it here2";
+   std::cout <<"made it here2";
    return count;
-}
-void LevelA::update_bullets(float deltaTime)
-{
-   if (!mGameState.map) return;
-   float lb = mGameState.map->getLeftBoundary();
-   float rb = mGameState.map->getRightBoundary();
-   float tb = mGameState.map->getTopBoundary();
-   float bb = mGameState.map->getBottomBoundary();
-
-   std::vector<Entity*> alive;
-   alive.reserve(mBullets.size());
-
-   for (auto *b : mBullets) {
-      Vector2 prev = b->getPosition();
-      b->update(deltaTime, nullptr, mGameState.map, nullptr, 0);
-
-      float xO=0.0f, yO=0.0f;
-      bool hitTile = mGameState.map->isSolidTileAt(b->getPosition(), &xO, &yO);
-      Vector2 p = b->getPosition();
-      bool out = (p.x < lb || p.x > rb || p.y < tb || p.y > bb);
-      bool stuck = (Vector2Distance(prev, p) < 0.5f);
-
-      auto bulletHits = [b](Entity *target) -> bool {
-         if (!target || !target->isActive()) return false;
-
-         Vector2 bPos  = b->getPosition();
-         Vector2 tPos  = target->getPosition();
-         Vector2 bSize = b->getColliderDimensions();
-         Vector2 tSize = target->getColliderDimensions();
-
-         float xDistance = fabs(bPos.x - tPos.x) - ((bSize.x + tSize.x) / 2.0f);
-         float yDistance = fabs(bPos.y - tPos.y) - ((bSize.y + tSize.y) / 2.0f);
-
-         return (xDistance < 0.0f && yDistance < 0.0f);
-      };
-
-      bool hitEnemy = false;
-      Entity *enemies[] = {
-         real_enemy1, real_enemy2, real_enemy3, real_enemy4, real_enemy5,
-         dead_enemy1, dead_enemy2, dead_enemy3, dead_enemy4, dead_enemy5
-      };
-
-      for (Entity *e : enemies) {
-         if (bulletHits(e)) {
-            e->setDeadOrAlive(DEAD);
-            e->deactivate();
-            hitEnemy = true;
-         }
-      }
-
-      if (hitTile || out || stuck || hitEnemy) {
-         delete b;
-      } else {
-         alive.push_back(b);
-      }
-   }
-
-   mBullets.swap(alive);
 }

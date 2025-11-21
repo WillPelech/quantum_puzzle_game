@@ -352,6 +352,7 @@ void Entity::update(float deltaTime, Entity *entity, Map *map,
         } 
         if(mEntityType == DOOR && isColliding(entity) && entity->get_key()){
             this->deactivate();
+            this->setDeadOrAlive(DEAD);
         }
         if(mEntityType == BULLET && entity->getEntityType()== NPC && isColliding(entity)){
             entity->deactivate();

@@ -1,10 +1,12 @@
 #include "CS3113/ShaderProgram.h"
+#include "CS3113/LevelB.h"
+#include "CS3113/LevelA.h"
 
 // Global Constants
 constexpr int SCREEN_WIDTH     = 1000,
               SCREEN_HEIGHT    = 600,
               FPS              = 120,
-               NUMBER_OF_LEVELS = 1;
+              NUMBER_OF_LEVELS = 2;
 
 constexpr Vector2 ORIGIN = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
             
@@ -19,7 +21,7 @@ Scene *gCurrentScene = nullptr;
 std::vector<Scene*> gLevels = {};
 
 LevelA *gLevelA = nullptr;
-// LevelB *gLevelB = nullptr;
+LevelB *gLevelB = nullptr;
 
 Effects *gEffects = nullptr;
 
@@ -48,12 +50,12 @@ void initialise()
     gShader.load("shaders/vertex.glsl", "shaders/fragment.glsl");
 
     gLevelA = new LevelA(ORIGIN, "#24190aff");
-    // gLevelB = new LevelB(ORIGIN, "#011627");
+    gLevelB = new LevelB(ORIGIN, "#011627");
 
     gLevels.push_back(gLevelA);
-    // gLevels.push_back(gLevelB);
+    gLevels.push_back(gLevelB);
 
-    switchToScene(gLevels[0]);
+    switchToScene(gLevels[1]);
 
     gEffects = new Effects(ORIGIN, (float) SCREEN_WIDTH * 1.5f, (float) SCREEN_HEIGHT * 1.5f);
 
@@ -124,7 +126,7 @@ void render()
 void shutdown() 
 {
     delete gLevelA;
-    // delete gLevelB;
+    delete gLevelB;
     // delete gLevelC;
 
     for (int i = 0; i < NUMBER_OF_LEVELS; i++) gLevels[i] = nullptr;

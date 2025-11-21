@@ -1,25 +1,25 @@
-#ifndef LEVELA_H
-#define LEVELA_H
+#ifndef LEVELB_H
+#define LEVELB_H
 
 #include "Scene.h"
 
-constexpr int LEVEL_WIDTH = 14,
-              LEVEL_HEIGHT = 8;
+constexpr int LEVELB_WIDTH  = 14,
+              LEVELB_HEIGHT = 8;
 
-class LevelA : public Scene {
+class LevelB : public Scene {
 private:
-    unsigned int mLevelData1[LEVEL_WIDTH * LEVEL_HEIGHT] = {
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1,
-        1, 2, 2, 2, 0, 0, 0, 2, 2, 2, 3, 3, 3, 1,
-        1, 3, 3, 3, 0, 0, 0, 3, 3, 3, 3, 3, 3, 1,
-        1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1
+    unsigned int mLevelData1[LEVELB_WIDTH * LEVELB_HEIGHT] = {
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11,  0,  0,  0,  0,  0,  0, 11,  0, 11,  0,  0,  0, 11,
+        11,  0,  0,  0,  0,  0,  0, 11, 11, 11,  0,  0,  0, 11,
+        11,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 11,
+        11,  0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 12, 12, 11,
+        11, 12, 12, 12,  0,  0,  0, 12, 12, 12, 12,  0 , 0, 11,
+        11, 12,  0, 12,  0,  0,  0, 12, 0,  12,  12,  0,  12,11,
+        11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 11
     };
 
-    unsigned int mLevelData2[LEVEL_WIDTH * LEVEL_HEIGHT] = {
+    unsigned int mLevelData2[LEVELB_WIDTH * LEVELB_HEIGHT] = {
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -69,9 +69,9 @@ public:
                         ACCELERATION_OF_GRAVITY = 981.0f,
                         END_GAME_THRESHOLD      = 800.0f;
 
-    LevelA();
-    LevelA(Vector2 origin, const char *bgHexCode);
-    ~LevelA();
+    LevelB();
+    LevelB(Vector2 origin, const char *bgHexCode);
+    ~LevelB();
     
     void initialise() override;
     void update(float deltaTime) override;

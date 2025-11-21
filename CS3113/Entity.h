@@ -9,7 +9,7 @@ enum EntityType   { PLAYER, BLOCK, PLATFORM, NPC, KEY, DOOR, BULLET };
 enum AIType       { WANDERER, FOLLOWER, JUMPER                 };
 enum AIState      { WALKING, IDLE, FOLLOWING, JUMPING           };
 enum gworld  {REAL=0, GHOST=1};
-enum deadOrAlive {DEAD,ALIVE};
+enum deadOrAlive {DEAD=0,ALIVE=1};
 class Entity
 {
 private:
