@@ -47,6 +47,7 @@ void LevelA::update_bullets(float deltaTime)
 
       for (Entity *e : enemies) {
          if (bulletHits(e)) {
+            e->setDeadOrAlive(DEAD);
             e->deactivate();
             hitEnemy = true;
          }
@@ -163,11 +164,17 @@ void LevelA::switch_worlds(){
          mCurrentBg = mBgReal;
          mGameState.mouse->setTexture("assets/mouse.png");
          mGameState.mouse->setAnimationAtlas(mouseAnimationAtlas);
+         key->deactivate();
+         door->deactivate();
       } else {
          mGameState.map = mGhostMap;
          mCurrentBg = mBgGhost;
          mGameState.mouse->setTexture("assets/ghost.png");
          mGameState.mouse->setAnimationAtlas(ghostAnimationAtlas);
+         if (~mGameState.mouse->get_key()){
+            key->activate();
+         }
+
       }
       switch_enemy_set();
    }
@@ -202,27 +209,27 @@ void LevelA::initialise_enemies(){
    dead_enemy1 = new Entity(
       {mOrigin.x + 220.0f, mOrigin.y - 200.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
+      "assets/ghost_slime.png",                   // texture file address
       NPC);
    dead_enemy2 = new Entity(
       {mOrigin.x - 120.0f, mOrigin.y + 150.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
+      "assets/ghost_slime.png",                   // texture file address
       NPC);
    dead_enemy3 = new Entity(
       {mOrigin.x + 170.0f, mOrigin.y + 120.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
+      "assets/ghost_slime.png",                   // texture file address
       NPC);
    dead_enemy4 = new Entity(
       {mOrigin.x + 270.0f, mOrigin.y - 220.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
+      "assets/ghost_slime.png",                   // texture file address
       NPC);
    dead_enemy5 = new Entity(
       {mOrigin.x + 220.0f, mOrigin.y - 170.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/slime.png",                   // texture file address
+      "assets/ghost_slime.png",                   // texture file address
       NPC);
    key = new Entity(
       {mOrigin.x + 350.0f, mOrigin.y -100.0f}, // position

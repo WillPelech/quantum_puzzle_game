@@ -308,7 +308,7 @@ void Entity::update(float deltaTime, Entity *entity, Map *map,
     if (mEntityStatus == INACTIVE) return;
     
     if (mEntityType == NPC) AIActivate(entity);
-
+    if (mEntityType == NPC && enemyDeadOrAlive == DEAD) return;
     resetColliderFlags();
 
     mVelocity.x = mMovement.x * mSpeed;
@@ -354,6 +354,7 @@ void Entity::update(float deltaTime, Entity *entity, Map *map,
             this->deactivate();
         }
         if(mEntityType == BULLET && entity->getEntityType()== NPC && isColliding(entity)){
+            entity->deactivate();
             entity->setDeadOrAlive(DEAD);
         }
     }
@@ -363,7 +364,6 @@ void Entity::update(float deltaTime, Entity *entity, Map *map,
 void Entity::render()
 {
     if(mEntityStatus == INACTIVE || enemyDeadOrAlive == DEAD && mEntityType == NPC) return;
-
     Rectangle textureArea;
     Rectangle heartArea;
 

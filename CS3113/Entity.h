@@ -101,7 +101,7 @@ public:
     void normaliseMovement() { Normalise(&mMovement); }
 
     void jump()       { mIsJumping = true;  }
-    void activate()   { mEntityStatus  = ACTIVE;   }
+    void activate()   { if(enemyDeadOrAlive == ALIVE){ mEntityStatus  = ACTIVE;}}
     void deactivate() { mEntityStatus  = INACTIVE; }
     void displayCollider();
 
