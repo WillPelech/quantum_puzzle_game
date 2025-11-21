@@ -60,6 +60,7 @@ private:
     int num_fired = 0;
     float mFireCooldown = 0.25f;
     float mFireTimer = 0.0f;
+    int counter_variable = 0;
 public:
     static constexpr float TILE_DIMENSION       = 75.0f,
                         ACCELERATION_OF_GRAVITY = 981.0f,

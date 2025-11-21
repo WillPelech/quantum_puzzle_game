@@ -180,22 +180,22 @@ void LevelA::initialise_enemies(){
       "assets/slime.png",                   // texture file address
       NPC);
    real_enemy2 = new Entity(
-      {mOrigin.x + 400.0f, mOrigin.y - 150.0f}, // position
+      {mOrigin.x - 100.0f, mOrigin.y}, // position
       {50.0f , 50.0f },             // scale
       "assets/slime.png",                   // texture file address
       NPC);
    real_enemy3 = new Entity(
-      {mOrigin.x + 150.0f, mOrigin.y - 300.0f}, // position
+      {mOrigin.x, mOrigin.y + 150.0f}, // position
       {50.0f , 50.0f },             // scale
       "assets/slime.png",                   // texture file address
       NPC);
    real_enemy4 = new Entity(
-      {mOrigin.x + 350.0f, mOrigin.y - 300.0f}, // position
+      {mOrigin.x + 250.0f, mOrigin.y - 300.0f}, // position
       {50.0f , 50.0f },             // scale
       "assets/slime.png",                   // texture file address
       NPC);
    real_enemy5 = new Entity(
-      {mOrigin.x + 500.0f, mOrigin.y - 250.0f}, // position
+      {mOrigin.x + 100.0f, mOrigin.y - 150.0f}, // position
       {50.0f , 50.0f },             // scale
       "assets/slime.png",                   // texture file address
       NPC);
@@ -205,27 +205,37 @@ void LevelA::initialise_enemies(){
       "assets/slime.png",                   // texture file address
       NPC);
    dead_enemy2 = new Entity(
-      {mOrigin.x + 420.0f, mOrigin.y - 150.0f}, // position
+      {mOrigin.x - 120.0f, mOrigin.y + 150.0f}, // position
       {50.0f , 50.0f },             // scale
       "assets/slime.png",                   // texture file address
       NPC);
    dead_enemy3 = new Entity(
-      {mOrigin.x + 170.0f, mOrigin.y - 320.0f}, // position
+      {mOrigin.x + 170.0f, mOrigin.y + 120.0f}, // position
       {50.0f , 50.0f },             // scale
       "assets/slime.png",                   // texture file address
       NPC);
    dead_enemy4 = new Entity(
-      {mOrigin.x + 370.0f, mOrigin.y - 320.0f}, // position
+      {mOrigin.x + 270.0f, mOrigin.y - 220.0f}, // position
       {50.0f , 50.0f },             // scale
       "assets/slime.png",                   // texture file address
       NPC);
    dead_enemy5 = new Entity(
-      {mOrigin.x + 520.0f, mOrigin.y - 270.0f}, // position
+      {mOrigin.x + 220.0f, mOrigin.y - 170.0f}, // position
       {50.0f , 50.0f },             // scale
       "assets/slime.png",                   // texture file address
       NPC);
-
-   // Set all enemies to FOLLOWER AI using the lerp-based FOLLOWING state
+   key = new Entity(
+      {mOrigin.x + 350.0f, mOrigin.y -100.0f}, // position
+      {50.0f , 50.0f},             // scale
+      "assets/key.png",                   // texture file address
+      KEY 
+   );
+   door = new Entity(
+      {mOrigin.x - 350.0f, mOrigin.y +50.0f}, // position
+      {50.0f , 50.0f},             // scale
+      "assets/lock.png",                   // texture file address
+      DOOR  
+   );
    real_enemy1->setAIType(FOLLOWER); real_enemy1->setAIState(FOLLOWING);
    real_enemy2->setAIType(FOLLOWER); real_enemy2->setAIState(FOLLOWING);
    real_enemy3->setAIType(FOLLOWER); real_enemy3->setAIState(FOLLOWING);
@@ -234,16 +244,16 @@ void LevelA::initialise_enemies(){
 
    dead_enemy1->setAIType(FOLLOWER); dead_enemy1->setAIState(FOLLOWING);
    dead_enemy2->setAIType(FOLLOWER); dead_enemy2->setAIState(FOLLOWING);
-   dead_enemy3->setAIType(FOLLOWER); dead_enemy3->setAIState(FOLLOWING);
+   dead_enemy3->setAIType(FOLLOWER); dead_enemy3->setAIState(IDLE);
    dead_enemy4->setAIType(FOLLOWER); dead_enemy4->setAIState(FOLLOWING);
    dead_enemy5->setAIType(FOLLOWER); dead_enemy5->setAIState(FOLLOWING);
 
    // Make enemies move faster than the default speed
    const int ENEMY_SPEED = 100;
-   real_enemy1->setSpeed(ENEMY_SPEED);
-   real_enemy2->setSpeed(ENEMY_SPEED);
+   real_enemy1->setSpeed(ENEMY_SPEED*2);
+   real_enemy2->setSpeed(ENEMY_SPEED/2);
    real_enemy3->setSpeed(ENEMY_SPEED);
-   real_enemy4->setSpeed(ENEMY_SPEED);
+   real_enemy4->setSpeed(ENEMY_SPEED/3);
    real_enemy5->setSpeed(ENEMY_SPEED);
 
    dead_enemy1->setSpeed(ENEMY_SPEED);
@@ -251,6 +261,18 @@ void LevelA::initialise_enemies(){
    dead_enemy3->setSpeed(ENEMY_SPEED);
    dead_enemy4->setSpeed(ENEMY_SPEED);
    dead_enemy5->setSpeed(ENEMY_SPEED);
+
+   real_enemy1->setColliderDimensions({real_enemy1->getScale().x/3,real_enemy1->getScale().y/3});
+   real_enemy2->setColliderDimensions({real_enemy2->getScale().x/3,real_enemy2->getScale().y/3});
+   real_enemy3->setColliderDimensions({real_enemy3->getScale().x/3,real_enemy3->getScale().y/3});
+   real_enemy4->setColliderDimensions({real_enemy4->getScale().x/3,real_enemy4->getScale().y/3});
+   real_enemy5->setColliderDimensions({real_enemy5->getScale().x/3,real_enemy5->getScale().y/3});
+
+   dead_enemy1->setColliderDimensions({dead_enemy1->getScale().x/3,dead_enemy1->getScale().y/3});
+   dead_enemy2->setColliderDimensions({dead_enemy2->getScale().x/3,dead_enemy2->getScale().y/3});
+   dead_enemy3->setColliderDimensions({dead_enemy3->getScale().x/3,dead_enemy3->getScale().y/3});
+   dead_enemy4->setColliderDimensions({dead_enemy4->getScale().x/3,dead_enemy4->getScale().y/3});
+   dead_enemy5->setColliderDimensions({dead_enemy5->getScale().x/3,dead_enemy5->getScale().y/3});
 }
 void LevelA::switch_enemy_set(){
    if(mGameState.world == REAL){
@@ -442,7 +464,7 @@ void LevelA::fire_bullet()
    Entity *b = new Entity(pos, scale, tex, BULLET);
    b->setColliderDimensions(scale);
    b->setAcceleration({0.0f, 0.0f});
-   b->setSpeed(100);
+   b->setSpeed(400);
 
    Direction d = mGameState.mouse->getDirection();
    switch (d) {
