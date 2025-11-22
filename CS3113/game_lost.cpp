@@ -13,6 +13,12 @@ void game_lost::initialise()
 {
    mGameState.nextSceneID = 0;
 
+   mGameState.camera = { 0 };
+   mGameState.camera.target = mOrigin;
+   mGameState.camera.offset = mOrigin;
+   mGameState.camera.rotation = 0.0f;
+   mGameState.camera.zoom = 1.0f;
+
    mGameState.bgm = LoadMusicStream("assets/music/TheEntertainer.mp3");
    SetMusicVolume(mGameState.bgm, 0.33f);
    PlayMusicStream(mGameState.bgm);
@@ -35,7 +41,7 @@ void game_lost::render()
    int fontSize = 40;
    int x = 50;
    int y = 300;
-   DrawText(start_text.c_str(), x, y, fontSize,RED);
+   DrawText(start_text.c_str(), x, y, fontSize,BLACK);
 }
 
 void game_lost::shutdown()
