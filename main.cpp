@@ -1,12 +1,16 @@
 #include "CS3113/ShaderProgram.h"
 #include "CS3113/LevelB.h"
 #include "CS3113/LevelA.h"
-
+#include "CS3113/LevelC.h"
+#include "CS3113/start_screen.h"
+#include "CS3113/start_menu.h"
+#include "CS3113/game_lost.h"
+#include "CS3113/game_won.h"
 // Global Constants
 constexpr int SCREEN_WIDTH     = 1000,
               SCREEN_HEIGHT    = 600,
               FPS              = 120,
-              NUMBER_OF_LEVELS = 2;
+              NUMBER_OF_LEVELS = 3;
 
 constexpr Vector2 ORIGIN = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
             
@@ -19,9 +23,13 @@ float gPreviousTicks   = 0.0f,
 
 Scene *gCurrentScene = nullptr;
 std::vector<Scene*> gLevels = {};
-
+start_screen *gIntroScene = nullptr;
+start_menu *gMenu = nullptr;
 LevelA *gLevelA = nullptr;
 LevelB *gLevelB = nullptr;
+LevelC *gLevelC = nullptr;
+game_lost *gGameLost = nullptr;
+game_won *gGameWon = nullptr;
 
 Effects *gEffects = nullptr;
 
@@ -48,14 +56,20 @@ void initialise()
     InitAudioDevice();
 
     gShader.load("shaders/vertex.glsl", "shaders/fragment.glsl");
-
+    gIntroScene = new start_screen(ORIGIN, "#1d1660ff", "Press ENTER to continue");
+    gMenu = new start_menu(ORIGIN, "#1d1660ff");
     gLevelA = new LevelA(ORIGIN, "#24190aff");
     gLevelB = new LevelB(ORIGIN, "#011627");
+    gLevelC = new LevelC(ORIGIN, "#011627");
+    gGameLost = new game_lost(ORIGIN, "#1d1660ff", "You lost! Press ENTER for menu");
+    gGameWon  = new game_won(ORIGIN, "#1d1660ff", "You won! Press ENTER for menu");
 
-    gLevels.push_back(gLevelA);
-    gLevels.push_back(gLevelB);
+    gLevels.push_back(gLevelA); 
+    gLevels.push_back(gLevelB); // id 2
+    gLevels.push_back(gLevelC); // id 3
 
-    switchToScene(gLevels[1]);
+    gCurrentScene = gIntroScene;
+    gCurrentScene->initialise();
 
     gEffects = new Effects(ORIGIN, (float) SCREEN_WIDTH * 1.5f, (float) SCREEN_HEIGHT * 1.5f);
 
@@ -67,15 +81,18 @@ void initialise()
 
 void processInput() 
 {
-    gCurrentScene->getState().mouse->resetMovement();
+    if (gCurrentScene && gCurrentScene->getState().mouse)
+    {
+        gCurrentScene->getState().mouse->resetMovement();
 
-    if      (IsKeyDown(KEY_A)) gCurrentScene->getState().mouse->moveLeft();
-    else if (IsKeyDown(KEY_D)) gCurrentScene->getState().mouse->moveRight();  
-    else if (IsKeyDown(KEY_W))gCurrentScene->getState().mouse->moveUp();   
-    else if (IsKeyDown(KEY_S))gCurrentScene->getState().mouse->moveDown();   
+        if      (IsKeyDown(KEY_A)) gCurrentScene->getState().mouse->moveLeft();
+        else if (IsKeyDown(KEY_D)) gCurrentScene->getState().mouse->moveRight();  
+        else if (IsKeyDown(KEY_W)) gCurrentScene->getState().mouse->moveUp();   
+        else if (IsKeyDown(KEY_S)) gCurrentScene->getState().mouse->moveDown();   
 
-    if (GetLength(gCurrentScene->getState().mouse->getMovement()) > 1.0f) 
-        gCurrentScene->getState().mouse->normaliseMovement();
+        if (GetLength(gCurrentScene->getState().mouse->getMovement()) > 1.0f) 
+            gCurrentScene->getState().mouse->normaliseMovement();
+    }
 
     if (IsKeyPressed(KEY_Q) || WindowShouldClose()) gAppStatus = TERMINATED;
 }
@@ -97,11 +114,13 @@ void update()
     while (deltaTime >= FIXED_TIMESTEP)
     {
         gCurrentScene->update(FIXED_TIMESTEP);
+        if (gCurrentScene && gCurrentScene->getState().mouse)
+        {
+            Vector2 cameraTarget = gCurrentScene->getState().mouse->getPosition();
+            gEffects->update(FIXED_TIMESTEP, &cameraTarget);
 
-        Vector2 cameraTarget = gCurrentScene->getState().mouse->getPosition();
-        gEffects->update(FIXED_TIMESTEP, &cameraTarget);
-
-        gLightPosition = gCurrentScene->getState().mouse->getPosition();
+            gLightPosition = gCurrentScene->getState().mouse->getPosition();
+        }
 
         deltaTime -= FIXED_TIMESTEP;
     }
@@ -125,9 +144,13 @@ void render()
 
 void shutdown() 
 {
+    delete gIntroScene;
+    delete gMenu;
     delete gLevelA;
     delete gLevelB;
-    // delete gLevelC;
+    delete gLevelC;
+    delete gGameLost;
+    delete gGameWon;
 
     for (int i = 0; i < NUMBER_OF_LEVELS; i++) gLevels[i] = nullptr;
 
@@ -152,7 +175,35 @@ int main(void)
         if (gCurrentScene->getState().nextSceneID > 0)
         {
             int id = gCurrentScene->getState().nextSceneID;
-            switchToScene(gLevels[id]);
+
+            switch (id)
+            {
+            case 1:
+                switchToScene(gLevelA);
+                break;
+            case 2:
+                switchToScene(gLevelB);
+                break;
+            case 3:
+                switchToScene(gLevelC);
+                break;
+            case 4:
+                switchToScene(gIntroScene);
+                break;
+            case 5:
+                switchToScene(gMenu);
+                break;
+            case 6:
+                switchToScene(gGameLost);
+                break;
+            case 7:
+                switchToScene(gGameWon);
+                break;
+            default:
+                break;
+            }
+
+            gCurrentScene->getState().nextSceneID = 0;
         }
 
         render();

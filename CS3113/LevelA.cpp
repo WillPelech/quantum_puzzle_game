@@ -36,9 +36,13 @@ void LevelA::update(float deltaTime)
    }
    // }
    // std::cout <<"made it to end game logic ";
-   if (get_num_alive()== 0 && key->getActive()== INACTIVE && !door->getDeadOrAlive()){
-      
-      mGameState.nextSceneID = 1;
+   if (mGameState.mouse->getLives() <= 0)
+   {
+      mGameState.nextSceneID = 6;
+   }
+   else if (get_num_alive()== 0 && key->getActive()== INACTIVE && !door->getDeadOrAlive())
+   {
+      mGameState.nextSceneID = 2;
    }
 }
 

@@ -1,9 +1,9 @@
-#include "LevelB.h"
+#include "LevelC.h"
 
-LevelB::LevelB()                                      : Scene { {0.0f}, nullptr   } {}
+LevelC::LevelC()                                      : Scene { {0.0f}, nullptr   } {}
 
 
-void LevelB::update_bullets(float deltaTime)
+void LevelC::update_bullets(float deltaTime)
 {
    if (!mGameState.map) return;
    float lb = mGameState.map->getLeftBoundary();
@@ -63,15 +63,15 @@ void LevelB::update_bullets(float deltaTime)
    mBullets.swap(alive);
 }
 
-void LevelB::render_bullets()
+void LevelC::render_bullets()
 {
    for (auto *b : mBullets) b->render();
 }
-LevelB::LevelB(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
+LevelC::LevelC(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
 
-LevelB::~LevelB() { shutdown(); }
+LevelC::~LevelC() { shutdown(); }
 
-void LevelB::initialise()
+void LevelC::initialise()
 {
    mGameState.nextSceneID = 0;
    mGameState.bgm = {0};
@@ -88,7 +88,7 @@ void LevelB::initialise()
       ----------- MAP -----------
    */
    mRealMap = new Map(
-      LEVELB_WIDTH, LEVELB_HEIGHT,
+      LEVELC_WIDTH, LEVELC_HEIGHT,
       (unsigned int *) mLevelData1,
       "assets/cave_/cave.png",
       TILE_DIMENSION,
@@ -96,7 +96,7 @@ void LevelB::initialise()
       mOrigin
    );
    mGhostMap = new Map(
-      LEVELB_WIDTH, LEVELB_HEIGHT,
+      LEVELC_WIDTH, LEVELC_HEIGHT,
       (unsigned int *) mLevelData2,
       "assets/ghost_tiles.png",
       TILE_DIMENSION,
@@ -156,7 +156,7 @@ void LevelB::initialise()
    initialise_enemies();
    switch_enemy_set();
 }
-void LevelB::switch_worlds(){
+void LevelC::switch_worlds(){
    if (IsKeyPressed(KEY_V)){
       mGameState.world = (mGameState.world == REAL ? GHOST : REAL);
       if (mGameState.world == REAL){
@@ -173,7 +173,7 @@ void LevelB::switch_worlds(){
       switch_enemy_set();
    }
 }
-void LevelB::initialise_enemies(){
+void LevelC::initialise_enemies(){
     std::map<Direction, std::vector<int>> fishAnimationAtlas = {
       {DOWN,  { 0,1,2,3}},
       {LEFT,  { 0,1,2,3}},
@@ -296,7 +296,7 @@ void LevelB::initialise_enemies(){
    dead_enemy4->setColliderDimensions({dead_enemy4->getScale().x/3,dead_enemy4->getScale().y/3});
    dead_enemy5->setColliderDimensions({dead_enemy5->getScale().x/3,dead_enemy5->getScale().y/3});
 }
-void LevelB::switch_enemy_set(){
+void LevelC::switch_enemy_set(){
    if(mGameState.world == REAL){
       dead_enemy1->deactivate();
       dead_enemy2->deactivate();
@@ -323,7 +323,7 @@ void LevelB::switch_enemy_set(){
    }
 
 }
-void LevelB::update_enemies(float deltaTime){
+void LevelC::update_enemies(float deltaTime){
    real_enemy1->update(
       deltaTime,
       mGameState.mouse,
@@ -395,7 +395,7 @@ void LevelB::update_enemies(float deltaTime){
       0
    );
 }
-void LevelB::render_enemies(){
+void LevelC::render_enemies(){
    dead_enemy1->render();
    dead_enemy2->render();
    dead_enemy3->render();
@@ -407,7 +407,7 @@ void LevelB::render_enemies(){
    real_enemy4->render();
    real_enemy5->render();
 }
-void LevelB::update(float deltaTime)
+void LevelC::update(float deltaTime)
 {
    switch_worlds();
    mFireTimer -= deltaTime;
@@ -447,16 +447,16 @@ void LevelB::update(float deltaTime)
    }
    else if (get_num_alive()== 0 && key->getActive()== INACTIVE && !door->getDeadOrAlive())
    {
-      mGameState.nextSceneID = 3;
+      mGameState.nextSceneID = 7;
    }
 }
 
-void LevelB::render()
+void LevelC::render()
 {
    ClearBackground(ColorFromHex(mBGColourHexCode));
 
-   float mapWidth  = LEVELB_WIDTH * TILE_DIMENSION;
-   float mapHeight = LEVELB_HEIGHT * TILE_DIMENSION;
+   float mapWidth  = LEVELC_WIDTH * TILE_DIMENSION;
+   float mapHeight = LEVELC_HEIGHT * TILE_DIMENSION;
    Rectangle src = { 0.0f, 0.0f, (float)mCurrentBg.width, (float)mCurrentBg.height };
    Rectangle dst = { mOrigin.x - mapWidth/2.0f, mOrigin.y - mapHeight/2.0f, mapWidth, mapHeight };
    DrawTexturePro(mCurrentBg, src, dst, {0.0f, 0.0f}, 0.0f, WHITE);
@@ -472,7 +472,7 @@ void LevelB::render()
 
 }
 
-void LevelB::shutdown()
+void LevelC::shutdown()
 {
    delete mGameState.mouse;
    if (mRealMap) { delete mRealMap; mRealMap = nullptr; }
@@ -489,7 +489,7 @@ void LevelB::shutdown()
    // UnloadSound(mGameState.jumpSound);
 }
 
-void LevelB::fire_bullet()
+void LevelC::fire_bullet()
 {  
    if (num_fired>20){
       return;
@@ -515,7 +515,7 @@ void LevelB::fire_bullet()
    num_fired +=1;
 }
 
-int LevelB::get_num_alive(){
+int LevelC::get_num_alive(){
    int count = 0;
    std::cout <<"made it here 1";
    count += real_enemy1->getDeadOrAlive();
