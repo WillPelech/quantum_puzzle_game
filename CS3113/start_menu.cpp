@@ -32,7 +32,7 @@ void start_menu::render()
 {
     ClearBackground(ColorFromHex(mBGColourHexCode));
 
-    const char* title = "Escape the Desert";
+    const char* title = "Both Sides";
     int titleSize = 48;
     int titleX = 50;
     int titleY = 60;

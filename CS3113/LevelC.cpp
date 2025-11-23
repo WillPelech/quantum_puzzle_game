@@ -105,7 +105,7 @@ void LevelC::initialise()
    );
    mGameState.map = mRealMap;
 
-   mBgReal = LoadTexture("assets/sea_floor.png");
+   mBgReal = LoadTexture("assets/lava_floor.png");
    mBgGhost = LoadTexture("assets/ghost_floor.png");
    mCurrentBg = mBgReal;
 
@@ -174,77 +174,77 @@ void LevelC::switch_worlds(){
    }
 }
 void LevelC::initialise_enemies(){
-    std::map<Direction, std::vector<int>> fishAnimationAtlas = {
-      {DOWN,  { 0,1,2,3}},
-      {LEFT,  { 0,1,2,3}},
-      {UP,    { 0,1,2,3}},
-      {RIGHT, { 0,1,2,3}},
+    std::map<Direction, std::vector<int>> dragonAnimationAtlas = {
+      {DOWN,  { 10,11,9}},
+      {LEFT,  { 10,11,9}},
+      {UP,    { 10,11,9}},
+      {RIGHT, { 10,11,9}},
    };
    // Spawn enemies at fixed positions based on level origin (away from mouse start)
       real_enemy1 = new Entity(
       {mOrigin.x - 300.0f, mOrigin.y + 150.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/fish.png",                   // texture file address
+      "assets/flying_twin_headed_dragon-red.png",                   // texture file address
       ATLAS,
-      {1,4},
-      fishAnimationAtlas,
+      {4,3},
+      dragonAnimationAtlas,
       NPC);
       real_enemy2 = new Entity(
       {mOrigin.x + 150.0f, mOrigin.y + 150.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/fish.png",                   // texture file address
+      "assets/flying_dragon-gold.png",                   // texture file address
       ATLAS,
-      {1,4},
-      fishAnimationAtlas,
+      {4,3},
+      dragonAnimationAtlas,
       NPC);
       real_enemy3 = new Entity(
       {mOrigin.x + 300.0f, mOrigin.y + 120.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/fish.png",                   // texture file address
+      "assets/flying_dragon-red.png",                   // texture file address
       ATLAS,
-      {1,4},
-      fishAnimationAtlas,
+      {4,3},
+      dragonAnimationAtlas,
       NPC);
       real_enemy4 = new Entity(
       {mOrigin.x + 200.0f, mOrigin.y - 200.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/fish.png",                   // texture file address
+      "assets/flying_twin_headed_dragon-blue.png",                   // texture file address
       ATLAS,
-      {1,4},
-      fishAnimationAtlas,
+      {4,3},
+      dragonAnimationAtlas,
       NPC);
       real_enemy5 = new Entity(
       {mOrigin.x + 200.0f, mOrigin.y - 200.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/fish.png",                   // texture file address
+      "assets/flying_twin_headed_dragon-blue.png",                   // texture file address
       ATLAS,
-      {1,4},
-      fishAnimationAtlas,
+      {4,3},
+      dragonAnimationAtlas,
       NPC);
      dead_enemy1 = new Entity(
       {mOrigin.x + 220.0f, mOrigin.y - 200.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/starfish.png",                   // texture file address
+      "assets/fire-fireball.gif",                   // texture file address
       NPC);
    dead_enemy2 = new Entity(
       {mOrigin.x - 120.0f, mOrigin.y + 150.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/starfish.png",                   // texture file address
+      "assets/fire-fireball.gif",                   // texture file address
       NPC);
    dead_enemy3 = new Entity(
       {mOrigin.x + 170.0f, mOrigin.y + 120.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/starfish.png",                   // texture file address
+      "assets/fire-fireball.gif",                   // texture file address
       NPC);
    dead_enemy4 = new Entity(
-      {mOrigin.x + 270.0f, mOrigin.y - 220.0f}, // position
+      {mOrigin.x , mOrigin.y}, // position
       {50.0f , 50.0f },             // scale
-      "assets/starfish.png",                   // texture file address
+      "assets/fire-fireball.gif",                   // texture file address
       NPC);
    dead_enemy5 = new Entity(
       {mOrigin.x + 220.0f, mOrigin.y - 170.0f}, // position
       {50.0f , 50.0f },             // scale
-      "assets/starfish.png",                   // texture file address
+      "assets/fire-fireball.gif",                   // texture file address
       NPC);
    key = new Entity(
       {mOrigin.x + 350.0f, mOrigin.y -100.0f}, // position
@@ -266,16 +266,16 @@ void LevelC::initialise_enemies(){
 
    dead_enemy1->setAIType(FOLLOWER); dead_enemy1->setAIState(FOLLOWING);
    dead_enemy2->setAIType(FOLLOWER); dead_enemy2->setAIState(FOLLOWING);
-   dead_enemy3->setAIType(FOLLOWER); dead_enemy3->setAIState(IDLE);
-   dead_enemy4->setAIType(FOLLOWER); dead_enemy4->setAIState(FOLLOWING);
+   dead_enemy3->setAIType(FOLLOWER); dead_enemy3->setAIState(FOLLOWING);
+   dead_enemy4->setAIType(JUMPER); dead_enemy4->setAIState(JUMPING);
    dead_enemy5->setAIType(FOLLOWER); dead_enemy5->setAIState(FOLLOWING);
 
    // Make enemies move faster than the default speed
    const int ENEMY_SPEED = 100;
-   real_enemy1->setSpeed(ENEMY_SPEED*2);
+   real_enemy1->setSpeed(ENEMY_SPEED*4);
    real_enemy2->setSpeed(ENEMY_SPEED/2);
    real_enemy3->setSpeed(ENEMY_SPEED);
-   real_enemy4->setSpeed(ENEMY_SPEED/3);
+   real_enemy4->setSpeed(ENEMY_SPEED*2);
    real_enemy5->setSpeed(ENEMY_SPEED);
 
    dead_enemy1->setSpeed(ENEMY_SPEED*2);
@@ -295,6 +295,10 @@ void LevelC::initialise_enemies(){
    dead_enemy3->setColliderDimensions({dead_enemy3->getScale().x/3,dead_enemy3->getScale().y/3});
    dead_enemy4->setColliderDimensions({dead_enemy4->getScale().x/3,dead_enemy4->getScale().y/3});
    dead_enemy5->setColliderDimensions({dead_enemy5->getScale().x/3,dead_enemy5->getScale().y/3});
+
+   // Configure jumper enemy (dead_enemy4) so it actually hops
+   dead_enemy4->setAcceleration({0.0f, 800.0f});
+   dead_enemy4->setJumpingPower(400.0f);
 }
 void LevelC::switch_enemy_set(){
    if(mGameState.world == REAL){
@@ -517,7 +521,7 @@ void LevelC::fire_bullet()
 
 int LevelC::get_num_alive(){
    int count = 0;
-   std::cout <<"made it here 1";
+   // std::cout <<"made it here 1";
    count += real_enemy1->getDeadOrAlive();
    count += real_enemy2->getDeadOrAlive();
    count += real_enemy3->getDeadOrAlive();
@@ -528,6 +532,6 @@ int LevelC::get_num_alive(){
    count += dead_enemy3->getDeadOrAlive();
    count += dead_enemy4->getDeadOrAlive();
    count += dead_enemy5->getDeadOrAlive();
-   std::cout <<"made it here2";
+   // std::cout <<"made it here2";
    return count;
 }

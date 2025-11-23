@@ -46,6 +46,10 @@ void start_screen::render()
    int x = 50;
    int y = titleY + titleSize + 30;
    DrawText(start_text.c_str(), x, y, fontSize, BLACK);
+   const char* ins = "Instructions:";
+   const char* ins_set = "AWSD to MOVE\nSPACE to SHOOT\nV to switch worlds\nYou must kill all enemies and get the key and lock to win";
+   DrawText(ins, titleX, titleY+fontSize+100, titleSize/2, BLACK);
+   DrawText(ins_set, titleX, titleY+fontSize+150, titleSize/2, BLACK);
 }
 
 void start_screen::shutdown()
