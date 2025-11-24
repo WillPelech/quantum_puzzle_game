@@ -366,7 +366,7 @@ void Entity::render()
 {
     if(mEntityStatus == INACTIVE || enemyDeadOrAlive == DEAD && mEntityType == NPC) return;
     Rectangle textureArea;
-    Rectangle heartArea;
+    Rectangle heart_area;
 
     switch (mTextureType)
     {
@@ -411,18 +411,17 @@ void Entity::render()
         mAngle, WHITE
     );
     if(mEntityType == PLAYER){
-        // Base offset for the hearts relative to the player position
         Vector2 heart_offset = { -300.0f, -100.0f };
         float spacing = 50.0f;
 
-        heartArea = {
+        heart_area = {
             0.0f, 0.0f,
             static_cast<float>(mHeart.width),
             static_cast<float>(mHeart.height)
         };
 
         if (mLives >= 1){
-            Rectangle oneArea = {
+            Rectangle one = {
                 mPosition.x + heart_offset.x + 2.0f * spacing,
                 mPosition.y + heart_offset.y,
                 50.0f,
@@ -430,15 +429,15 @@ void Entity::render()
             };
             DrawTexturePro(
                 mHeart,
-                heartArea,
-                oneArea,
+                heart_area,
+                one,
                 {0.0f, 0.0f},
                 0.0f, WHITE
             );
         }
 
         if (mLives >= 2){
-            Rectangle twoArea = {
+            Rectangle two = {
                 mPosition.x + heart_offset.x + 1.0f * spacing,
                 mPosition.y + heart_offset.y,
                 50.0f,
@@ -446,15 +445,15 @@ void Entity::render()
             };
             DrawTexturePro(
                 mHeart,
-                heartArea,
-                twoArea,
+                heart_area,
+                two,
                 {0.0f, 0.0f},
                 0.0f, WHITE
             );
         }
 
         if (mLives == 3){
-            Rectangle threeArea = {
+            Rectangle three = {
                 mPosition.x + heart_offset.x + 0.0f * spacing,
                 mPosition.y + heart_offset.y,
                 50.0f,
@@ -462,8 +461,8 @@ void Entity::render()
             };
             DrawTexturePro(
                 mHeart,
-                heartArea,
-                threeArea,
+                heart_area,
+                three,
                 {0.0f, 0.0f},
                 0.0f, WHITE
             );
