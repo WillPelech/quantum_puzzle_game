@@ -296,9 +296,8 @@ void LevelC::initialise_enemies(){
    dead_enemy4->setColliderDimensions({dead_enemy4->getScale().x/3,dead_enemy4->getScale().y/3});
    dead_enemy5->setColliderDimensions({dead_enemy5->getScale().x/3,dead_enemy5->getScale().y/3});
 
-   // Configure jumper enemy (dead_enemy4) so it actually hops
-   dead_enemy4->setAcceleration({0.0f, 800.0f});
-   dead_enemy4->setJumpingPower(400.0f);
+   dead_enemy4->setAcceleration({0.0f, 3900.0f});
+   dead_enemy4->setJumpingPower(24000.0f);
 }
 void LevelC::switch_enemy_set(){
    if(mGameState.world == REAL){
