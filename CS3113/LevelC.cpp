@@ -65,7 +65,52 @@ void LevelC::update_bullets(float deltaTime)
 
 void LevelC::render_bullets()
 {
-   for (auto *b : mBullets) b->render();
+   for (auto *b : mBullets) {
+      b->render();
+
+      Vector2 pos = b->getPosition();
+
+      const float trail_distance = 20.0f;
+      Vector2 offset = { 0.0f, 0.0f };
+
+      Direction d = b->getDirection();
+      switch (d) {
+         case LEFT:  offset.x =  trail_distance; break; // behind is to the right
+         case RIGHT: offset.x = -trail_distance; break; // behind is to the left
+         case UP:    offset.y =  trail_distance; break; // behind is down
+         case DOWN:  offset.y = -trail_distance; break; // behind is up
+         default:    offset.x = -trail_distance; break;
+      }
+
+      Vector2 spawnPos = { pos.x + offset.x, pos.y + offset.y };
+      particle_system(spawnPos.x, spawnPos.y);
+   }
+}
+
+void LevelC::particle_system(float x_pos, float y_pos)
+{
+   const int   NUM_PARTICLES = 10;
+   const float MAX_OFFSET    = 12.0f;
+
+   for (int i = 0; i < NUM_PARTICLES; ++i) {
+      float halfW = (float)GetRandomValue(2, 4);
+      float halfH = (float)GetRandomValue(2, 4);
+
+      float offsetX = ((float)GetRandomValue(-100, 100) / 100.0f) * MAX_OFFSET;
+      float offsetY = ((float)GetRandomValue(-100, 100) / 100.0f) * MAX_OFFSET;
+
+      float cx = x_pos + offsetX;
+      float cy = y_pos + offsetY;
+
+      int x = (int)(cx - halfW);
+      int y = (int)(cy - halfH);
+      int w = (int)(halfW * 2.0f);
+      int h = (int)(halfH * 2.0f);
+
+      Rectangle rec = { (float)x, (float)y, (float)w, (float)h };
+      Color redOutline = { 255, 0, 0, 255 };
+      DrawRectangleLinesEx(rec, 2.0f, redOutline);
+   }
 }
 LevelC::LevelC(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
 
@@ -78,11 +123,12 @@ void LevelC::initialise()
    mGameState.jumpSound = {0};
    mGameState.world = REAL;
    prev_state = mGameState.world;
-   // mGameState.bgm = LoadMusicStream();
-    SetMusicVolume(mGameState.bgm, 0.33f); 
-   // PlayMusicStream(gState.bgm);
+   mGameState.bgm = LoadMusicStream("assets/background_music.mp3");
+   SetMusicVolume(mGameState.bgm, 0.33f);
+   PlayMusicStream(mGameState.bgm);
 
-   // mGameState.jumpSound = LoadSound();
+   mGameState.bulletSound = LoadSound("assets/gun_sound.mp3");
+   mGameState.deathSound  = LoadSound("assets/death_sound.mp3");
 
    /*
       ----------- MAP -----------
@@ -413,6 +459,7 @@ void LevelC::render_enemies(){
 void LevelC::update(float deltaTime)
 {
    switch_worlds();
+   UpdateMusicStream(mGameState.bgm);
    mFireTimer -= deltaTime;
    if (IsKeyPressed(KEY_SPACE) && mFireTimer <= 0.0f) {
       fire_bullet();
@@ -452,6 +499,11 @@ void LevelC::update(float deltaTime)
    {
       mGameState.nextSceneID = 7;
    }
+   if (mGameState.mouse->getLives() < mPrevLives)
+   {
+      PlaySound(mGameState.deathSound);
+   }
+   mPrevLives = mGameState.mouse->getLives();
 }
 
 void LevelC::render()
@@ -497,6 +549,7 @@ void LevelC::fire_bullet()
    if (num_fired>20){
       return;
    }
+   PlaySound(mGameState.bulletSound);
    const char *tex = (mGameState.world == REAL) ? "assets/mouse_bullet.gif" : "assets/ghost_bullet.gif";
    Vector2 pos = mGameState.mouse->getPosition();
    Vector2 scale = { 24.0f, 24.0f };

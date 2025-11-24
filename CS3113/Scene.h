@@ -9,8 +9,9 @@ struct GameState
     gworld world;
 
     Music bgm;
+    Sound bulletSound;
+    Sound deathSound;
     Sound jumpSound;
-
     Camera2D camera;
     
 

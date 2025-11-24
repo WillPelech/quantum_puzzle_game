@@ -65,7 +65,52 @@ void LevelB::update_bullets(float deltaTime)
 
 void LevelB::render_bullets()
 {
-   for (auto *b : mBullets) b->render();
+   for (auto *b : mBullets) {
+      b->render();
+
+      Vector2 pos = b->getPosition();
+
+      const float trail_dis = 20.0f;
+      Vector2 offset = { 0.0f, 0.0f };
+
+      Direction d = b->getDirection();
+      switch (d) {
+         case LEFT:  offset.x =  trail_dis; break; // behind is to the right
+         case RIGHT: offset.x = -trail_dis; break; // behind is to the left
+         case UP:    offset.y =  trail_dis; break; // behind is down
+         case DOWN:  offset.y = -trail_dis; break; // behind is up
+         default:    offset.x = -trail_dis; break;
+      }
+
+      Vector2 spawnPos = { pos.x + offset.x, pos.y + offset.y };
+      particle_system(spawnPos.x, spawnPos.y);
+   }
+}
+
+void LevelB::particle_system(float x_pos, float y_pos)
+{
+   const int   NUM_PARTICLES = 10;
+   const float MAX_OFFSET    = 12.0f;
+
+   for (int i = 0; i < NUM_PARTICLES; ++i) {
+      float halfW = (float)GetRandomValue(2, 4);
+      float halfH = (float)GetRandomValue(2, 4);
+
+      float offsetX = ((float)GetRandomValue(-100, 100) / 100.0f) * MAX_OFFSET;
+      float offsetY = ((float)GetRandomValue(-100, 100) / 100.0f) * MAX_OFFSET;
+
+      float cx = x_pos + offsetX;
+      float cy = y_pos + offsetY;
+
+      int x = (int)(cx - halfW);
+      int y = (int)(cy - halfH);
+      int w = (int)(halfW * 2.0f);
+      int h = (int)(halfH * 2.0f);
+
+      Rectangle rec = { (float)x, (float)y, (float)w, (float)h };
+      Color redOutline = { 255, 0, 0, 255 };
+      DrawRectangleLinesEx(rec, 2.0f, redOutline);
+   }
 }
 LevelB::LevelB(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
 
@@ -78,11 +123,12 @@ void LevelB::initialise()
    mGameState.jumpSound = {0};
    mGameState.world = REAL;
    prev_state = mGameState.world;
-   // mGameState.bgm = LoadMusicStream();
-    SetMusicVolume(mGameState.bgm, 0.33f); 
-   // PlayMusicStream(gState.bgm);
+   mGameState.bgm = LoadMusicStream("assets/background_music.mp3");
+   SetMusicVolume(mGameState.bgm, 0.33f);
+   PlayMusicStream(mGameState.bgm);
 
-   // mGameState.jumpSound = LoadSound();
+   mGameState.bulletSound = LoadSound("assets/gun_sound.mp3");
+   mGameState.deathSound  = LoadSound("assets/death_sound.mp3");
 
    /*
       ----------- MAP -----------
@@ -410,6 +456,7 @@ void LevelB::render_enemies(){
 void LevelB::update(float deltaTime)
 {
    switch_worlds();
+   UpdateMusicStream(mGameState.bgm);
    mFireTimer -= deltaTime;
    if (IsKeyPressed(KEY_SPACE) && mFireTimer <= 0.0f) {
       fire_bullet();
@@ -449,6 +496,11 @@ void LevelB::update(float deltaTime)
    {
       mGameState.nextSceneID = 3;
    }
+   if (mGameState.mouse->getLives() < mPrevLives)
+   {
+      PlaySound(mGameState.deathSound);
+   }
+   mPrevLives = mGameState.mouse->getLives();
 }
 
 void LevelB::render()
@@ -494,6 +546,7 @@ void LevelB::fire_bullet()
    if (num_fired>20){
       return;
    }
+   PlaySound(mGameState.bulletSound);
    const char *tex = (mGameState.world == REAL) ? "assets/mouse_bullet.gif" : "assets/ghost_bullet.gif";
    Vector2 pos = mGameState.mouse->getPosition();
    Vector2 scale = { 24.0f, 24.0f };
@@ -517,7 +570,7 @@ void LevelB::fire_bullet()
 
 int LevelB::get_num_alive(){
    int count = 0;
-   std::cout <<"made it here 1";
+   // std::cout <<"made it here 1";
    count += real_enemy1->getDeadOrAlive();
    count += real_enemy2->getDeadOrAlive();
    count += real_enemy3->getDeadOrAlive();
@@ -528,6 +581,6 @@ int LevelB::get_num_alive(){
    count += dead_enemy3->getDeadOrAlive();
    count += dead_enemy4->getDeadOrAlive();
    count += dead_enemy5->getDeadOrAlive();
-   std::cout <<"made it here2";
+   // std::cout <<"made it here2";
    return count;
 }

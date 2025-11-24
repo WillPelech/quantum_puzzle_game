@@ -64,6 +64,7 @@ private:
     float mFireCooldown = 0.25f;
     float mFireTimer = 0.0f;
     int counter_variable = 0;
+    int mPrevLives = 0;
 public:
     static constexpr float TILE_DIMENSION       = 75.0f,
                         ACCELERATION_OF_GRAVITY = 981.0f,
@@ -86,6 +87,7 @@ public:
     void initialise_enemies();
     void update_enemies(float deltaTime);
     int get_num_alive();
+    void particle_system(float x_pos, float y_pos);
 };
 
 #endif
