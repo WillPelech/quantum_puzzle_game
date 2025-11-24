@@ -24,7 +24,7 @@ void LevelC::update_bullets(float deltaTime)
       bool out = (p.x < lb || p.x > rb || p.y < tb || p.y > bb);
       bool stuck = (Vector2Distance(prev, p) < 0.5f);
 
-      // Bullet-enemy collision check (AABB style)
+      // Bullet-enemy collision check 
       auto bulletHits = [b](Entity *target) -> bool {
          if (!target || !target->isActive()) return false;
 
@@ -90,26 +90,23 @@ void LevelC::render_bullets()
 void LevelC::particle_system(float x_pos, float y_pos)
 {
    const int   NUM_PARTICLES = 10;
-   const float MAX_OFFSET    = 12.0f;
+   const float MAX_OFFSET    = 10.0f;
 
    for (int i = 0; i < NUM_PARTICLES; ++i) {
-      float halfW = (float)GetRandomValue(2, 4);
-      float halfH = (float)GetRandomValue(2, 4);
+      float halfW = (float)GetRandomValue(1, 3);
+      float halfH = (float)GetRandomValue(1, 3);
 
       float offsetX = ((float)GetRandomValue(-100, 100) / 100.0f) * MAX_OFFSET;
       float offsetY = ((float)GetRandomValue(-100, 100) / 100.0f) * MAX_OFFSET;
 
-      float cx = x_pos + offsetX;
+      float cx = x_pos + offsetX/2;
       float cy = y_pos + offsetY;
 
       int x = (int)(cx - halfW);
       int y = (int)(cy - halfH);
       int w = (int)(halfW * 2.0f);
       int h = (int)(halfH * 2.0f);
-
-      Rectangle rec = { (float)x, (float)y, (float)w, (float)h };
-      Color redOutline = { 255, 0, 0, 255 };
-      DrawRectangleLinesEx(rec, 2.0f, redOutline);
+      DrawRectangleLines(x, y, w, h, (Color){ 0, 255, 0, 255 });
    }
 }
 LevelC::LevelC(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}

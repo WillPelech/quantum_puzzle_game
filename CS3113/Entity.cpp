@@ -392,7 +392,6 @@ void Entity::render()
         default: break;
     }
 
-    // Destination rectangle – centred on gPosition
     Rectangle destinationArea = {
         mPosition.x,
         mPosition.y,
@@ -400,7 +399,6 @@ void Entity::render()
         static_cast<float>(mScale.y)
     };
 
-    // Origin inside the source texture (centre of the texture)
     Vector2 originOffset = {
         static_cast<float>(mScale.x) / 2.0f,
         static_cast<float>(mScale.y) / 2.0f
@@ -413,60 +411,66 @@ void Entity::render()
         mAngle, WHITE
     );
     if(mEntityType == PLAYER){
-        if (mLives ==3){
-        Rectangle threeArea= {
-            100,50,50,50
-        };
+        // Base offset for the hearts relative to the player position
+        Vector2 heart_offset = { -300.0f, -100.0f };
+        float spacing = 50.0f;
+
         heartArea = {
-                0.0f, 0.0f,
-                static_cast<float>(mHeart.width),
-                static_cast<float>(mHeart.height)
-            };
-        DrawTexturePro(
-            mHeart,
-            heartArea, 
-            threeArea,
-            originOffset,
-            mAngle, WHITE
-        );
-    }
-        if (mLives >=2){
-        Rectangle twoArea= {
-            150,50,50,50
+            0.0f, 0.0f,
+            static_cast<float>(mHeart.width),
+            static_cast<float>(mHeart.height)
         };
-        heartArea = {
-                0.0f, 0.0f,
-                static_cast<float>(mHeart.width),
-                static_cast<float>(mHeart.height)
+
+        if (mLives >= 1){
+            Rectangle oneArea = {
+                mPosition.x + heart_offset.x + 2.0f * spacing,
+                mPosition.y + heart_offset.y,
+                50.0f,
+                50.0f
             };
-        DrawTexturePro(
-            mHeart,
-            heartArea, 
-            twoArea,
-            originOffset,
-            mAngle, WHITE
-        );
-    }
-    if (mLives >=1){
-        Rectangle oneArea= {
-            200,50,50,50
-        };
-        heartArea = {
-                0.0f, 0.0f,
-                static_cast<float>(mHeart.width),
-                static_cast<float>(mHeart.height)
+            DrawTexturePro(
+                mHeart,
+                heartArea,
+                oneArea,
+                {0.0f, 0.0f},
+                0.0f, WHITE
+            );
+        }
+
+        if (mLives >= 2){
+            Rectangle twoArea = {
+                mPosition.x + heart_offset.x + 1.0f * spacing,
+                mPosition.y + heart_offset.y,
+                50.0f,
+                50.0f
             };
-        DrawTexturePro(
-            mHeart,
-            heartArea, 
-            oneArea,
-            originOffset,
-            mAngle, WHITE
-        );
-    }
+            DrawTexturePro(
+                mHeart,
+                heartArea,
+                twoArea,
+                {0.0f, 0.0f},
+                0.0f, WHITE
+            );
+        }
+
+        if (mLives == 3){
+            Rectangle threeArea = {
+                mPosition.x + heart_offset.x + 0.0f * spacing,
+                mPosition.y + heart_offset.y,
+                50.0f,
+                50.0f
+            };
+            DrawTexturePro(
+                mHeart,
+                heartArea,
+                threeArea,
+                {0.0f, 0.0f},
+                0.0f, WHITE
+            );
+        }
     }
 
-     displayCollider();
+     //displayCollider();
 }
 
 void Entity::displayCollider() 

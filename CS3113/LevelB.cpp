@@ -24,7 +24,7 @@ void LevelB::update_bullets(float deltaTime)
       bool out = (p.x < lb || p.x > rb || p.y < tb || p.y > bb);
       bool stuck = (Vector2Distance(prev, p) < 0.5f);
 
-      // Bullet-enemy collision check (AABB style)
+      // Bullet-enemy collision check 
       auto bulletHits = [b](Entity *target) -> bool {
          if (!target || !target->isActive()) return false;
 

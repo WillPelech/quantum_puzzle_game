@@ -51,8 +51,7 @@ void initialise() {
   InitAudioDevice();
 
   gShader.load("shaders/vertex.glsl", "shaders/fragment.glsl");
-  gIntroScene =
-      new start_screen(ORIGIN, "#42c2f5", "Press ENTER to continue");
+  gIntroScene = new start_screen(ORIGIN, "#42c2f5", "Press ENTER to continue");
   gMenu = new start_menu(ORIGIN, "#42c2f5");
   gLevelA = new LevelA(ORIGIN, "#24190aff");
   gLevelB = new LevelB(ORIGIN, "#011627");

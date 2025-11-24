@@ -19,7 +19,7 @@ void game_lost::initialise()
    mGameState.camera.rotation = 0.0f;
    mGameState.camera.zoom = 1.0f;
 
-   mGameState.bgm = LoadMusicStream("assets/music/TheEntertainer.mp3");
+   mGameState.bgm = LoadMusicStream("assets/endgame.mp3");
    SetMusicVolume(mGameState.bgm, 0.33f);
    PlayMusicStream(mGameState.bgm);
 
